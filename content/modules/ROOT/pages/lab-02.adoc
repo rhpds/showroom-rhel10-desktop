@@ -1,0 +1,109 @@
+
+== Lab 2: Managing a Pod with Podman Quadlets
+
+RHEL 10 offers enhanced container management with Podman, including full support for Quadlets. Quadlets allow you to define pods and containers as systemd services using simple description files. The release notes mention "Quadlets for pods in Podman are available" (Section 4.23) and that the podman RHEL System Role can manage "quadlet units of type Pod" (Section 1.1, 4.19).
+
+=== Objective:
+Create a simple web server pod containing an Nginx container using Quadlet files.
+Manage this pod as a systemd user service.
+
+* Steps:
+. Create a Quadlet directory for user services (if it doesn't exist): User-specific Quadlet files are typically placed in ~/.config/containers/systemd/.
++
+[source,shell]
+----
+mkdir -p ~/.config/containers/systemd/
+cd ~/.config/containers/systemd/
+----
+
+. Create a .pod Quadlet file: Name this file my-webserver.pod. This file will define the pod.
++
+[source,shell]
+----
+cat > ~/.config/containers/systemd/my-webserver.pod <<EOF
+[Unit]
+Description=My Simple Web Server Pod
+After=network-online.target # Ensure network is up
+
+[Pod]
+PublishPort=8080:80 # Map host port 8080 to pod port 80
+
+[Install]
+WantedBy=default.target # For user services
+EOF
+
+----
+
+. Create a .container Quadlet file for the Nginx container within this pod: Name this file nginx-in-pod.container.
++
+[source,shell]
+----
+cat > ~/.config/containers/systemd/nginx-in-pod.container <<EOF
+[Unit]
+Description=Nginx container running in my-webserver pod
+Pod=my-webserver.pod # Crucial: Links this container to the pod defined above
+
+[Container]
+Image=docker.io/library/nginx:latest
+# You can add other Podman run arguments here if needed
+# Example: PodmanArgs=--volume=/local/path:/usr/share/nginx/html:ro
+
+[Install]
+WantedBy=default.target
+EOF
+
+----
+
+. Reload the systemd user daemon to recognize the new unit files: 
++
+[source,shell]
+----
+systemctl --user daemon-reload
+----
++
+NOTE: Systemd will automatically generate a service unit for my-webserver.pod.
+
+. Start the pod service:
++
+[source,shell]
+----
+systemctl --user start my-webserver.service
+----
+
+. Check the status of the pod service and the container:
++
+[source,shell]
+----
+systemctl --user status my-webserver.service
+podman ps --pod  #This will show containers associated with pods
+----
++
+NOTE: You should see the Nginx container running as part of the my-webserver pod.
+
+. Test the Nginx server: Access it from your server's command line or a browser if applicable:
++
+[source,shell]
+----
+curl http://localhost:8080
+----
++
+NOTE: You should receive the Nginx welcome page.
+
+. Stop the pod service:
++
+[source,shell]
+----
+systemctl --user stop my-webserver.service
+----
+
+. (Optional) Enable the service to start automatically when your user session starts:
++
+[source,shell]
+----
+systemctl --user enable my-webserver.service
+----
+
+=== Expected Outcome:
+* You will successfully define a multi-container application (even if simple here) as a pod using Quadlet files.
+* The systemd user manager will seamlessly manage your pod as a service.
+* You will access the Nginx web server running inside the containerized pod, demonstrating a modern and integrated way to manage container workloads.

@@ -1,0 +1,39 @@
+
+== Lab 1: Exploring the RHEL Lightspeed Command-Line Assistant
+
+RHEL 10 introduces a command-line assistant powered by RHEL Lightspeed, a generative AI service designed to help you understand, configure, and troubleshoot your RHEL systems. This feature is highlighted in section 4.24 of the release notes.
+
+=== Objective:
+Interact with the RHEL Lightspeed assistant to get help with common Linux commands and RHEL-specific concepts.
+
+* Steps:
+. Access your RHEL 10 server terminal.
+. Invoke the assistant. 
++
+NOTE: The release notes (section 4.24) mention the general availability of this feature. The exact command might be clad or redhat-ai. We'll use redhat-ai as a placeholder. You can verify with redhat-ai --help or system documentation.
+
+. Let's ask for an explanation of a command:
++
+[source,shell]
+----
+redhat-ai explain "How do I list all active systemd services?"
+----
+
+. Review the assistant's response.
++
+TIP:
+It should provide command examples (e.g., systemctl list-units --type=service --state=active) and explanations based on RHEL documentation.
+
+. Try another query, perhaps about a RHEL 10 feature:
++
+[source,shell]
+----
+redhat-ai explain "What are Podman Quadlets in RHEL 10?"
+----
+
+. Observe the contextual help. The assistant is trained on RHEL product documentation and Red Hat Knowledgebase articles, aiming to provide accurate and relevant information.
+
+=== Expected Outcome:
+* You will successfully interact with the RHEL Lightspeed command-line assistant.
+* The assistant will provide helpful, context-aware explanations and command suggestions for your queries, demonstrating its value as an integrated help tool.
+

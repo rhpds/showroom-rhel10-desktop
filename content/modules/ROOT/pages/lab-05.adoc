@@ -1,0 +1,145 @@
+
+== Lab 5: Implementing File Integrity Monitoring with the aide RHEL System Role
+RHEL 10 introduces a new RHEL System Role for the Advanced Intrusion Detection Environment (aide) to help detect unauthorized changes to files and directories (Release Notes Sections 1.1, 4.19). This lab will guide you through setting up basic file integrity monitoring using this role.
+
+=== Objective:
+Use the aide RHEL System Role to initialize the AIDE database. Demonstrate how AIDE detects file changes.
+
+* Steps:
+
+. Create a directory for your Ansible playbook (if you haven't already from Lab 3, or use a new one):
++
+[source,shell]
+----
+mkdir -p ~/ansible_aide_lab
+cd ~/ansible_aide_lab
+----
+. Create an Ansible inventory file named inventory.ini (if not already present): This targets your local machine.
++
+[source,shell]
+----
+cat > ~/ansible_aide_lab/inventory.ini <<EOF
+[localhost]
+127.0.0.1 ansible_connection=local
+EOF
+
+----
+
+. Create a playbook file named configure_aide.yml:
++
+NOTE: This playbook will use the redhat.rhel_system_roles.aide role to install AIDE (if not present), configure basic rules, initialize its database, and optionally schedule a check.
++
+[source,shell]
+----
+cat > ~/ansible_aide_lab/configure_aide.yml <<EOF
+---
+- name: Configure AIDE for File Integrity Monitoring
+  hosts: localhost
+  become: true # The playbook needs sudo to install AIDE and manage its configuration
+
+  vars:
+    # The aide role will install the 'aide' package if not present.
+    # Define some basic rules for AIDE to monitor.
+    # These are examples; a production setup would require careful consideration.
+    # 'NORMAL' is a predefined set of attributes in /etc/aide.conf (P+i+n+u+g+s+b+m+c+sha512)
+    aide_rules:
+      - '/etc NORMAL'
+      - '/sbin NORMAL'
+      - '/usr/sbin NORMAL'
+      # Add a rule for a specific test file we will create
+      - '/opt/test_monitored_file.txt NORMAL'
+
+    # Initialize the AIDE database after configuration
+    aide_init_db: true
+
+    # Optionally, run an initial check after initialization
+    # aide_run_initial_check: true # Set to false for this lab to do it manually
+
+    # Optionally, configure a cron job for regular checks
+    # aide_cron_job:
+    #   state: present
+    #   minute: '0'
+    #   hour: '2' # Run daily at 2 AM
+    #   day: '*'
+    #   month: '*'
+    #   weekday: '*'
+
+  roles:
+    - role: redhat.rhel_system_roles.aide
+EOF
+
+----
+
+. Run the Ansible playbook to configure and initialize AIDE:
++
+[source,shell]
+----
+   ansible-playbook -i inventory.ini configure_aide.yml
+----
++
+NOTE: This will install aide, generate /etc/aide.conf based on aide_rules, and initialize the AIDE database (e.g., /var/lib/aide/aide.db.gz).
+
+. Create the test file that AIDE is configured to monitor:
++
+[source,shell]
+----
+sudo touch /opt/test_monitored_file.txt
+sudo chmod 644 /opt/test_monitored_file.txt
+echo "Initial content for integrity check." | sudo tee /opt/test_monitored_file.txt
+----
++
+[NOTE]
+====
+Since we added the rule for /opt/test_monitored_file.txt before initializing the database, and the file didn't exist then, AIDE's initial database won't have an entry for it. For this lab, it's better to re-initialize or update the DB after creating the file, or ensure the file exists before the first initialization.
+====
+
+. Let's adjust for simplicity: Re-run the playbook to ensure the newly created file is part of the initialized database. Alternatively, for a more realistic scenario, you would initialize, then create/modify, then check. For this lab, re-running the init is easier.
++
+[source,shell]
+----
+ansible-playbook -i inventory.ini configure_aide.yml # This will re-initialize the DB with the file present
+----
+
+. Perform an initial AIDE check to confirm the baseline (optional but good practice):
++
+[source,shell]
+----
+sudo aide --check
+----
++
+NOTE: This should report no differences if the database was just initialized or updated correctly.
+
+. Modify the monitored test file:
++
+[source,shell]
+----
+echo "This content has been modified." | sudo tee -a /opt/test_monitored_file.txt
+sudo chmod 600 /opt/test_monitored_file.txt # Also change permissions
+----
+
+. Run an AIDE check to detect the changes:
++
+[source,shell]
+----
+   sudo aide --check
+----
++
+NOTE: You can also use the role to trigger a check if you prefer, by setting a variable like aide_run_check: true and re-running the playbook (ensure aide_init_db is false or conditional to avoid re-initializing).
+
+. Review the output from aide --check. It should report:
++
+** Changes to /opt/test_monitored_file.txt (content, size, mtime, ctime, sha512 hash).
+** Permission changes for /opt/test_monitored_file.txt.
+
+=== Expected Outcome:
+* The Ansible playbook will successfully install (if needed), configure AIDE, and initialize its database.
+* After modifying a monitored file, running sudo aide --check will report the detected changes, demonstrating the file integrity monitoring capability provided by AIDE and managed by the RHEL System Role.
+
+
+== Conclusion
+
+Congratulations! 
+
+You have successfully completed this lab guide and explored several significant features of Red Hat Enterprise Linux 10. You've interacted with the RHEL Lightspeed assistant, managed containerized applications as services using Podman Quadlets, configured sudo with RHEL System Roles, worked with the default Python 3.12 environment, and implemented basic file integrity monitoring with the aide System Role.
+
+These tasks represent just a fraction of the new capabilities and improvements in RHEL 10. We encourage you to consult the official Red Hat Enterprise Linux 10 Release Notes and documentation to further explore how this release can enhance your IT infrastructure and development workflows.

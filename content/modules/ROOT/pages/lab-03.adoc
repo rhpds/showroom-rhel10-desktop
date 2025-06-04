@@ -1,0 +1,92 @@
+
+== Lab 3: Leveraging the sudo RHEL System Role
+
+RHEL 10 introduces a new sudo RHEL System Role for consistent sudo configuration management (Sections 1.1 and 4.19 in release notes). This lab demonstrates its use for a basic local configuration change via Ansible.
+
+=== Objective:
+Use the sudo RHEL System Role with a local Ansible playbook to add a specific sudo rule for a test user.
+
+Steps:
+
+. Create a directory for your Ansible playbook:
++
+[source,shell]
+----
+mkdir ~/ansible_sudo_lab
+cd ~/ansible_sudo_lab
+----
+
+. Create an Ansible inventory file named inventory.ini: This targets your local machine.
++
+[source,shell]
+----
+cat > ~/ansible_sudo_lab/inventory.ini <<EOF
+[localhost]
+127.0.0.1 ansible_connection=local
+EOF
+----
+
+. Create a playbook file named configure_labuser_sudo.yml: This playbook will use the redhat.rhel_system_roles.sudo role. It will configure labuser (ensure this user exists) to run the /usr/bin/id command as root without requiring a password.
++
+[source,shell]
+----
+cat > ~/ansible_sudo_lab/configure_labuser_sudo.yml <<EOF
+---
+- name: Configure sudo for labuser
+  hosts: localhost
+  become: true # The playbook needs sudo to modify /etc/sudoers.d/
+
+  vars:
+    sudo_configs:
+      - name: "allow_labuser_id_cmd" # This will be part of the filename in /etc/sudoers.d/
+        state: present
+        config:
+          - sudoers_rules:
+              - users: ['labuser']
+                hosts: ['ALL'] # Can be more specific, e.g., 'localhost'
+                runas: ['root']
+                commands: ['/usr/bin/id']
+                nopasswd: true # Allow command without password
+
+  roles:
+    - role: redhat.rhel_system_roles.sudo
+
+EOF
+
+----
+
+. Run the Ansible playbook:
++
+[source,shell]
+----
+ansible-playbook -i inventory.ini configure_labuser_sudo.yml
+----
+
+. Verify the sudo rule:
++
+TIP: The sudo role typically creates configuration files in /etc/sudoers.d/. Check for a file named something like ansible_managed_allow_labuser_id_cmd.
++
+[source,shell]
+----
+sudo ls /etc/sudoers.d/
+sudo cat /etc/sudoers.d/ansible_managed_allow_labuser_id_cmd  #Adjust filename if needed
+----
++
+NOTE: You should see a line like: labuser ALL=(root) NOPASSWD: /usr/bin/id
+
+. Switch to labuser and test the sudo command:
++
+[source,shell]
+----
+su - labuser
+sudo /usr/bin/id
+exit # Return to your original user
+----
++
+NOTE: The sudo /usr/bin/id command should execute as root and output uid=0(root) gid=0(root) groups=0(root)... without prompting labuser for a password.
+
+=== Expected Outcome:
+* The Ansible playbook will execute successfully, applying the sudo configuration via the RHEL System Role.
+* A new, specific sudo rule will be active on the system.
+* labuser will be able to execute the specified command (/usr/bin/id) as root without a password, demonstrating the role's capability.
+

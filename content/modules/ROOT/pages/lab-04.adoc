@@ -1,0 +1,63 @@
+
+== Lab 4: Working with Python 3.12
+
+Python 3.12 is the default Python implementation in RHEL 10 (Sections 1.1 and 4.13). This version includes various enhancements and performance improvements.
+
+=== Objective:
+Verify that Python 3.12 is the default Python version. Execute a simple Python script demonstrating f-string capabilities, which are well-established and benefit from grammar formalization in Python 3.12.
+
+* Steps:
+. Check the default Python version, Open your terminal and run:
++
+[source,shell]
+----
+python -V
+And/or:
+python3 -V
+----
++
+TIP: Both should output Python 3.12.x.
+
+. Create a simple Python script using an f-string, Create a file named rhel10_python_test.py:
++
+[source,shell]
+----
+cat > rhel10_python_test.py <<EOF
+
+system_version = "RHEL 10"
+python_version_tuple = (3, 12)
+
+# Using an f-string to format output
+greeting = f"Welcome to {system_version}!"
+version_message = f"You are using Python {python_version_tuple[0]}.{python_version_tuple[1]}."
+
+print(greeting)
+print(version_message)
+
+# Example of f-string with expression
+num_cores = 4 # Assume 4 cores for this example
+print(f"This system appears to have {num_cores} CPU cores (example value).")
+
+EOF
+
+----
+
+. Make the script executable (optional) and run it:
++
+[source,shell]
+----
+chmod +x rhel10_python_test.py
+./rhel10_python_test.py
+----
++
+[NOTE]
+====
+Or run directly with:
+python3 rhel10_python_test.py
+Observe the output. It should display the messages formatted using f-strings.
+====
+
+=== Expected Outcome:
+* You will confirm that Python 3.12.x is the default system Python.
+* You will successfully execute a Python script that utilizes f-strings, a key feature of modern Python available by default in RHEL 10.
+
