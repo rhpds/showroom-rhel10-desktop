@@ -1,6 +1,6 @@
-* xref:lab-01.adoc[1. Exploring the RHEL Lightspeed Command-Line Assistant]
-* xref:lab-02.adoc[2. Managing a Pod with Podman Quadlets]
-* xref:lab-03.adoc[3. Leveraging the sudo RHEL System Role]
-* xref:lab-04.adoc[4. Working with Python 3.12]
-* xref:lab-05.adoc[5. Implementing File Integrity Monitoring with the aide RHEL System Role]
+// * xref:lab-01.adoc[1. Exploring the RHEL Lightspeed Command-Line Assistant]
+* xref:lab-02.adoc[1. Managing a Pod with Podman Quadlets]
+* xref:lab-03.adoc[2. Leveraging the sudo RHEL System Role]
+* xref:lab-04.adoc[3. Working with Python 3.12]
+* xref:lab-05.adoc[4. Implementing File Integrity Monitoring with the aide RHEL System Role]
 
